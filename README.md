@@ -1,66 +1,109 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# ARPM
 
-## About Laravel
+## Task 5: Q&A - Answers
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### A) Explain this code:
+_(Provide the code snippet so I can explain it in detail.)_
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### B) Difference Between Context and Cache Facades in Laravel
 
-## Learning Laravel
+#### 🔹 1. Cache Facade
+The `Cache` facade is used to store and retrieve data temporarily to improve performance.
+It supports multiple drivers such as **file, database, Redis, and Memcached**.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+✅ **Example:**
+```php
+use Illuminate\Support\Facades\Cache;
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+// Store data for 60 minutes
+Cache::put('user_123', ['name' => 'John Doe', 'email' => 'john@example.com'], 60);
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+// Retrieve cached data
+$user = Cache::get('user_123');
 
-## Laravel Sponsors
+// Remove from cache
+Cache::forget('user_123');
+```
+📌 **Use Case:** Storing frequently accessed data such as **user profiles, settings, or API responses** to improve performance.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+#### 🔹 2. Context Facade
+Laravel **does not have** a built-in `Context` facade.
+If this is a **custom facade**, it likely provides **a way to store and retrieve contextual data during a request lifecycle** (e.g., request metadata, user session, or dynamic configurations).
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+✅ **Example (Custom `Context` Implementation)**
+```php
+class Context
+{
+    protected static $data = [];
 
-## Contributing
+    public static function set($key, $value)
+    {
+        self::$data[$key] = $value;
+    }
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    public static function get($key, $default = null)
+    {
+        return self::$data[$key] ?? $default;
+    }
+}
 
-## Code of Conduct
+// Usage
+Context::set('current_user', auth()->user());
+$user = Context::get('current_user');
+```
+📌 **Use Case:**
+- In a **multi-tenant system**, `Context` can store the current tenant.
+- Storing temporary **request-specific** data that should not persist between requests.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+### C) Difference Between `$query->update()`, `$model->update()`, and `$model->updateQuietly()`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### **1️⃣ `$query->update()`**
+- Updates **multiple records** at once using **mass update**.
+- **Bypasses Eloquent events (`saving`, `updating`, `updated`)**.
 
-## License
+✅ **Example:**
+```php
+Order::where('status', 'pending')->update(['status' => 'processed']);
+```
+📌 **Use Case:** When updating multiple rows at once **without** triggering model events.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+#### **2️⃣ `$model->update()`**
+- Updates **a single model instance**.
+- **Triggers Eloquent events** such as `updating`, `updated`, `saving`, and `saved`.
+
+✅ **Example:**
+```php
+$order = Order::find(1);
+$order->update(['status' => 'shipped']);
+```
+📌 **Use Case:** When updating **a single record** and you want to trigger Eloquent events.
+
+---
+
+#### **3️⃣ `$model->updateQuietly()`**
+- Similar to `$model->update()`, but **does not trigger Eloquent events**.
+
+✅ **Example:**
+```php
+$order = Order::find(1);
+$order->updateQuietly(['status' => 'shipped']);
+```
+
+
+---
+
+### ✅ **Final Thoughts**
+- **Use `$query->update()`** when updating multiple records quickly.
+- **Use `$model->update()`** when updating a single record and need event listeners.
+- **Use `$model->updateQuietly()`** when you want to **skip** triggering model events.
+
+🚀 Let me know if you need further clarifications!
